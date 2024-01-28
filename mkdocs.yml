@@ -30,13 +30,13 @@ theme:
 
 nav:
   - Jetson:
-    - Home: index.md
-    - Setup: setup.md
-    - Orginize: organize.md
-    - Train: train.md
-    - Run: run.md
+    - Home: jetson/index.md
+    - Setup: jetson/setup.md
+    - Orginize: jetson/organize.md
+    - Train: jetson/train.md
+    - Run: jetson/run.md
   - Pico:
-    - setup.md
+    - Setup: pico/setup.md
 
 
 
