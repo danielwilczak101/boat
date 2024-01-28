@@ -1,6 +1,5 @@
 site_name: Daniel Wilczak - Tutorials
-repo_url: https://github.com/sfc-gh-dwilczak/tutorials/
-edit_uri: edit/main/docs/
+repo_url: https://danielwilczak101.github.io/boat/
 
 theme:
   name: material
