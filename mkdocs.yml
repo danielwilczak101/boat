@@ -29,7 +29,7 @@ theme:
 
 nav:
   - Jetson:
-    - Home: jetson/index.md
+    - Home: index.md
     - Setup: jetson/setup.md
     - Orginize: jetson/organize.md
     - Train: jetson/train.md
