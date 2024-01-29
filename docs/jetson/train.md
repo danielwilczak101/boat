@@ -1,8 +1,16 @@
 # Train and Save
-Go in to the bouy folder.
+
+## Setup:
+Open a terminal and run this commands.
 ```
-cd Desktop/bouy
+cd Desktop/jetson-inference/
 ```
+```
+docker/run.sh --volume /home/boat/Desktop/boat/:/jetson-inference/boat/
+```       
+```
+cd boat
+```   
 
 ## Training
 Make sure you have a version folder in `data`` with the proper [orginized]() format.
