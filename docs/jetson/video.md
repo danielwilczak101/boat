@@ -15,3 +15,8 @@ docker/run.sh --volume /home/boat/Desktop/boat/:/jetson-inference/boat/
 cd boat
 ```  
 ## Run
+Put your video in the `videos/` folder and run the code below.
+
+```
+python3 detect.py --model=models/v1/ssd-mobilenet.onnx --labels=models/v1/labels.txt --input-width=640 --input-height=640 /video/<VIDEO FILE NAME>.mp4
+```
