@@ -1,5 +1,3 @@
-## Setup:
-
 ### Install operating system
 Install Jetpack Ubuntu OS using the [jetpack jdk]().
 

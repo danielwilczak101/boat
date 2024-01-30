@@ -4,7 +4,6 @@ repo_url: https://danielwilczak101.github.io/boat/
 theme:
   name: material
   features:
-    - navigation.tabs
     - content.code.select
     - content.code.copy
     - content.action.edit
@@ -30,7 +29,7 @@ theme:
 nav:
   - Jetson:
     - Home: index.md
-    - Setup: jetson/setup.md
+    - Install: jetson/install.md
     - Orginize: jetson/organize.md
     - Train: jetson/train.md
     - Run: jetson/run.md
