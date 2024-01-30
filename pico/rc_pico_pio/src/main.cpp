@@ -109,8 +109,6 @@ void packetChannels() {
     }
     printChannelData();
 
-    
-
     // Update servo positions
     int frontServoPosition = map(channels[0], 999, 2000, 0, 180); // Example for channel 1
     int backServoPosition = map(channels[1], 999, 2000, 0, 180); // Example for channel 2
@@ -130,7 +128,6 @@ void packetChannels() {
     //RC SF Switch channel data for triggering E-Stop; Down is E-Stop ON (Power OFF); Up is E-Stop OFF (Power ON)
     int EStop = channels[4];
 
-    
     //For Autonomous / RC Control Relays Switch
     int autonomousRCswitch = channels[5]; //Get channel data from RC Swtich SB
     int autonomousState = 0; 
@@ -175,26 +172,26 @@ void packetChannels() {
 
 
 // Code to make RC Controls drive like our basic autonomous software controls
-    int rightStickHORIZONTAL = channels[0];
+    //int rightStickHORIZONTAL = channels[0];
 
-    if (rightStickHORIZONTAL <= 1100) {
+    //if (rightStickHORIZONTAL <= 1100) {
         //Turn Left
-        frontServo.write(leftFront); //Turn both servos left
-        backServo.write(leftBack);
-    }
-    else if (rightStickHORIZONTAL >= 1400 && rightStickHORIZONTAL <= 1600) {
+    //    frontServo.write(leftFront); //Turn both servos left
+    //    backServo.write(leftBack);
+    //}
+    //else if (rightStickHORIZONTAL >= 1400 && rightStickHORIZONTAL <= 1600) {
         //Striaght
-        frontServo.write(straightFront); //Turn both servos straight
-        backServo.write(straightBack);
-    } else if (rightStickHORIZONTAL >= 1800) {
+    //    frontServo.write(straightFront); //Turn both servos straight
+    //    backServo.write(straightBack);
+    //} else if (rightStickHORIZONTAL >= 1800) {
         //Turn Right
-        frontServo.write(rightFront); //Turn both servos to the right
-        backServo.write(rightBack);
-    }
+    //    frontServo.write(rightFront); //Turn both servos to the right
+    //    backServo.write(rightBack);
+    //}
 
 // Not needed becuase we want out boat to drive like the autonomous simple code above.
-    //frontServo.write(frontServoPosition);
-    //backServo.write(backServoPosition);
+    frontServo.write(frontServoPosition);
+    backServo.write(frontServoPosition);
     frontMotorESC.writeMicroseconds(motorSpeed);
     backMotorESC.writeMicroseconds(motorSpeed);
 }
