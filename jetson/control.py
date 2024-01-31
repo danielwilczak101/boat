@@ -37,8 +37,8 @@ output_capture = videoOutput(args.output, argv=sys.argv)
 # note: to hard-code the paths to load a model, the following API can be used:
 #
 detect_net = detectNet(
-    model="models/v2/ssd-mobilenet.onnx",
-    labels="models/v2/labels.txt", 
+    model="models/v3/ssd-mobilenet.onnx",
+    labels="models/v3/labels.txt", 
     input_blob="input_0",
     output_cvg="scores",
     output_bbox="boxes", 
@@ -67,8 +67,6 @@ if ROBOT_CONNECTED:
 	def send_command(command):
 		"""Send a command to the Arduino."""
 		ser.write(f"{command}\n".encode())
-		time.sleep(1)  # Wait for the Arduino to process the command
-		print(ser.readline().decode().strip())  # Print the response from Arduino
 
 	def turn_motor_on():
 		"""Send command to turn the motor on."""
@@ -82,7 +80,8 @@ if ROBOT_CONNECTED:
 		"""Send command to set the servo to a specific angle."""
 		if 0 <= angle <= 180:
 			send_command(3)
-			send_command(angle)
+			send_command(round(angle))
+			print(f'Angle - {round(angle)}')
 		else:
 			print("Invalid angle. Please enter a value between 0 and 180.")
 else:
@@ -178,7 +177,7 @@ async def read_data(
             break
     data["stop"] = True
 
-async def send_commands(data, frequency=10, threshold=25):
+async def send_commands(data, frequency=1, threshold=25):
     while not data["stop"]:
         await asyncio.sleep(frequency)
         if "direction" not in data:
@@ -196,10 +195,10 @@ async def send_commands(data, frequency=10, threshold=25):
         
         if direction < 0:
             commands.append("left")
-            set_servo_angle(direction / 10 + 90)
+            set_servo_angle(direction *4 / 10 + 90)
         else:
             commands.append("right")
-            set_servo_angle(direction / 10 + 90)
+            set_servo_angle(direction *4 / 10 + 90)
         commands.append(str(round(direction / 10 + 90)))
         data["command"] = " ".join(commands)
 
@@ -213,3 +212,5 @@ async def main():
     turn_motor_off()
 
 asyncio.run(main())
+
+
