@@ -20,13 +20,13 @@ python3 train.py --dataset-type=voc --data=data/v2 --model-dir=models/v2 --batch
 ```
 
 ## Save the model
-Update the version number.
+Select the model you want to use. Look through your training results.
 ```
-python3 save.py --input-model=models/mobilenet-v1-ssd-mp-0_675.pth --output-model=models/v1/ssd-mobilenet.onnx --resolution=640
+python3 save.py --input=models/v2/mb1-ssd-Epoch-3-Loss-2.3346897708045113.pth --output=models/v2/ssd-mobilenet.onnx --labels=models/v2/labels.txt  --resolution=640
 ```
 
 ## Run
 Run the saved model to detect the objects.
 ```
-python3 detect.py --model=models/v1/ssd-mobilenet.onnx --labels=models/v1/labels.txt --input-width=640 --input-height=640 /dev/video1
+python3 detect.py --model=models/v2/ssd-mobilenet.onnx --labels=models/v2/labels.txt --input-width=640 --input-height=640 --input-blob=input_0 --output-cvg=scores --output-bbox=boxes /jetson-inference/boat/tasks/task1_run2_IMG_3541.mp4
 ```
