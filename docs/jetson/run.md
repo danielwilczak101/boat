@@ -31,7 +31,26 @@ cd jetson
 python3 control.py --model=models/v3/mb1-ssd-Epoch-28-Loss-1.924500224325392.pth --labels=models/v3/labels.txt --input-width=640 --input-height=640 --input-blob=input_0 --output-cvg=scores --output-bbox=boxes --threshold=.15 /jetson-inference/boat/tasks/run4.mp4
 ```
 
-# Videos
+
+
+## Web Viewer with Controls
+Give the output to a server to view via a browser `webrtc://@:8554/output`.
+
+```
+cd Desktop/jetson-inference/
+
+docker/run.sh --volume /home/boat/Desktop/boat/:/jetson-inference/boat/
+
+cd boat/
+
+pip3 install pyserial-3.5-py2.py3-none-any.whl
+
+cd jetson
+
+python3 control.py --model=models/v3/mb1-ssd-Epoch-28-Loss-1.924500224325392.pth --labels=models/v3/labels.txt --input-width=640 --input-height=640 --input-blob=input_0 --output-cvg=scores --output-bbox=boxes --threshold=.15 /jetson-inference/boat/tasks/run4.mp4 webrtc://@:8554/output
+```
+
+## Videos
 The goal of this page is to show users how to run the controls code using a video. This is good for dry run testing to see how the controls would work without having to be in the water. Example video is `/jetson-inference/boat/tasks/run4.mp4`. Put your video in the `tasks/` folder and run the code below.
 
 ```
