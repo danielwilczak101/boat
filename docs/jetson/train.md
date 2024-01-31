@@ -28,5 +28,6 @@ python3 save.py --input=models/v2/mb1-ssd-Epoch-3-Loss-2.3346897708045113.pth --
 ## Run
 Run the saved model to detect the objects.
 ```
-python3 detect.py --model=models/v2/ssd-mobilenet.onnx --labels=models/v2/labels.txt --input-width=640 --input-height=640 --input-blob=input_0 --output-cvg=scores --output-bbox=boxes /jetson-inference/boat/tasks/task1_run2_IMG_3541.mp4
+python3 detect.py --model=models/v3/mb1-ssd-Epoch-28-Loss-1.924500224325392.pth --labels=models/v3/labels.txt --input-width=640 --input-height=640 --input-blob=input_0 --output-cvg=scores --output-bbox=boxes --threshold=.15 /jetson-inference/boat/tasks/run4.mp4
 ```
+
