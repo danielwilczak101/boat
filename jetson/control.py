@@ -21,7 +21,8 @@ parser.add_argument("input", type=str, default="", nargs='?', help="URI of the i
 parser.add_argument("output", type=str, default="", nargs='?', help="URI of the output stream")
 parser.add_argument("--network", type=str, default="ssd-mobilenet-v2", help="pre-trained model to load (see below for options)")
 parser.add_argument("--overlay", type=str, default="box,labels,conf", help="detection overlay flags (e.g. --overlay=box,labels,conf)\nvalid combinations are:  'box', 'labels', 'conf', 'none'")
-parser.add_argument("--threshold", type=float, default=0.5, help="minimum detection threshold to use") 
+parser.add_argument("--threshold", type=float, default=0.5, help="Minimum detection threshold to use.")
+parser.add_argument("--motor", type=float, default=1450, help="Speed of the motor to run on.")
 
 try:
     args = parser.parse_known_args()[0]
@@ -53,37 +54,36 @@ direction: float = 0.0
 weight: float = 0.0
 
 if ROBOT_CONNECTED:
-	import serial
-	import time
+    import serial
+    arduino = serial.Serial(port='/dev/ttyACM0', baudrate=115200, timeout=.1)
 
-	# Set the correct serial port for your Arduino (e.g., COM3, /dev/ttyACM0, etc.)
-	SERIAL_PORT = '/dev/ttyACM0'  # Change this to your serial port
-	BAUD_RATE = 115200
+    def send_command(command, value):
+        """
+        Sends a command followed by an integer value to the Arduino.
+        """
+        command_str = f"{command},{value}\n"  # Format command string
+        arduino.write(bytes(command_str, 'utf-8'))  # Send command
 
-	# Establish a serial connection
-	ser = serial.Serial(SERIAL_PORT, BAUD_RATE, timeout=1)
+    def turn_motor_on():
+        """Send command to turn the motor on."""
+        print(f'motor on {round(args.motor)}')
+        send_command(1, round(args.motor))
 
+    def turn_motor_off():
+        """Send command to turn the motor off."""
+        send_command(2, 0)
 
-	def send_command(command):
-		"""Send a command to the Arduino."""
-		ser.write(f"{command}\n".encode())
+    def set_servo_angle(angle):
+        """Send command to set the servo to a specific angle."""
+        if 0 <= angle <= 180:
+            angle = round(angle)
+            send_command(3, angle)
+            print(f"Angle {angle}")
+        else:
+            print("Invalid angle. Please enter a value between 0 and 180.")
 
-	def turn_motor_on():
-		"""Send command to turn the motor on."""
-		send_command(1)
-
-	def turn_motor_off():
-		"""Send command to turn the motor off."""
-		send_command(2)
-
-	def set_servo_angle(angle):
-		"""Send command to set the servo to a specific angle."""
-		if 0 <= angle <= 180:
-			send_command(3)
-			send_command(round(angle))
-			print(f'Angle - {round(angle)}')
-		else:
-			print("Invalid angle. Please enter a value between 0 and 180.")
+    
+    
 else:
     def turn_motor_on():
         pass
@@ -195,10 +195,10 @@ async def send_commands(data, frequency=1, threshold=25):
         
         if direction < 0:
             commands.append("left")
-            set_servo_angle(direction *4 / 10 + 90)
+            set_servo_angle(direction * 4 / 10 + 90)
         else:
             commands.append("right")
-            set_servo_angle(direction *4 / 10 + 90)
+            set_servo_angle(direction * 4 / 10 + 90)
         commands.append(str(round(direction / 10 + 90)))
         data["command"] = " ".join(commands)
 
@@ -212,5 +212,4 @@ async def main():
     turn_motor_off()
 
 asyncio.run(main())
-
-
+    

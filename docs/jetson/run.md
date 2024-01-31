@@ -11,7 +11,7 @@ docker/run.sh --volume /home/boat/Desktop/boat/:/jetson-inference/boat/
 
 cd jetson-inference/boat/jetson
 
-python3 detect.py --model=models/v3/mb1-ssd-Epoch-28-Loss-1.924500224325392.pth --labels=models/v3/labels.txt --input-width=640 --input-height=640 --input-blob=input_0 --output-cvg=scores --output-bbox=boxes --threshold=.15 /jetson-inference/boat/tasks/run4.mp4
+python3 detect.py --model=models/v3/mb1-ssd-Epoch-28-Loss-1.924500224325392.pth --labels=models/v3/labels.txt --input-width=640 --input-height=640 /jetson-inference/boat/tasks/run4.mp4
 ```
 
 ## Control
@@ -28,7 +28,7 @@ pip3 install pyserial-3.5-py2.py3-none-any.whl
 
 cd jetson
 
-python3 control.py --model=models/v3/mb1-ssd-Epoch-28-Loss-1.924500224325392.pth --labels=models/v3/labels.txt --input-width=640 --input-height=640 --input-blob=input_0 --output-cvg=scores --output-bbox=boxes --threshold=.15 /jetson-inference/boat/tasks/run4.mp4
+python3 control.py --model=models/v3/mb1-ssd-Epoch-28-Loss-1.924500224325392.pth --labels=models/v3/labels.txt --input-width=640 --input-height=640 --input-blob=input_0 --output-cvg=scores --output-bbox=boxes --threshold=.15 --motor=1400 /jetson-inference/boat/tasks/run4.mp4
 ```
 
 
@@ -47,7 +47,7 @@ pip3 install pyserial-3.5-py2.py3-none-any.whl
 
 cd jetson
 
-python3 control.py --model=models/v3/mb1-ssd-Epoch-28-Loss-1.924500224325392.pth --labels=models/v3/labels.txt --input-width=640 --input-height=640 --input-blob=input_0 --output-cvg=scores --output-bbox=boxes --threshold=.15 /jetson-inference/boat/tasks/run4.mp4 webrtc://@:8554/output
+python3 control.py --model=models/v3/mb1-ssd-Epoch-28-Loss-1.924500224325392.pth --labels=models/v3/labels.txt --input-width=640 --input-height=640 --input-blob=input_0 --output-cvg=scores --output-bbox=boxes --threshold=.15 --motor=1400 /jetson-inference/boat/tasks/run4.mp4 webrtc://@:8554/output
 ```
 
 ## Videos
@@ -60,5 +60,5 @@ docker/run.sh --volume /home/boat/Desktop/boat/:/jetson-inference/boat/
 
 cd jetson-inference/boat/jetson
 
-python3 detect.py --model=models/v3/mb1-ssd-Epoch-28-Loss-1.924500224325392.pth --labels=models/v3/labels.txt --input-width=640 --input-height=640 --input-blob=input_0 --output-cvg=scores --output-bbox=boxes --threshold=.15 /jetson-inference/boat/tasks/run4.mp4
+python3 detect.py --model=models/v3/mb1-ssd-Epoch-28-Loss-1.924500224325392.pth --labels=models/v3/labels.txt --input-width=640 --input-height=640 /jetson-inference/boat/tasks/run4.mp4
 ```
