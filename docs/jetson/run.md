@@ -1,5 +1,5 @@
 ## Setup:
-Open a terminal and run this commands.       
+Open a terminal and run this commands. To ssh `ssh boat@192.168.0.196`.       
 
 ## Detect
 Detect is if you just want to see the model bounding boxes without an control operations. Good for new labeled dataset testing.
