@@ -3,7 +3,7 @@
 
 int receivedCommand = -1; // Variable to store received command
 int receivedAngle = 0;    // Variable to store received angle for the servo motor
-int receivedThrottle = 1500; // Variable to store received throttle value for the motor
+int receivedThrottle = 0; // Variable to store received throttle value for the motor
 
 //----------------Boat Setup START------------------------------
 //Motor and Servo Pins 
@@ -44,17 +44,22 @@ void loop() {
       case 1: // Motor ON
         if (Serial.available() > 0) {
           receivedThrottle = Serial.parseInt();
-          // Ensure throttle value is within the expected range
-          receivedThrottle = constrain(receivedThrottle, 1300, 1500);
+          // Check if receivedThrottle is within the desired range
+          //1500 is stopped
+          //1300 is a limited forward throttle
+          //Max forward thrust is 1100. (Due to running at 24v this should never be set.)
+          if(receivedThrottle >= 1300 && receivedThrottle <= 1500) {
+            frontMotorESC.writeMicroseconds(receivedThrottle); // Apply throttle value to motor
+            // backMotorESC.writeMicroseconds(receivedThrottle); // Apply throttle value to back motor if used
+            digitalWrite(LED_BUILTIN, HIGH); // Turn ON on-board LED to represent motor on.
+          }
+          // If receivedThrottle is not within the range, do nothing (ignore it)
         }
-        frontMotorESC.writeMicroseconds(receivedThrottle); // Apply throttle value to motor
-        // backMotorESC.writeMicroseconds(receivedThrottle); // Uncomment if using a separate back motor control
-        digitalWrite(LED_BUILTIN, HIGH); // Turn ON on-board LED to represent motor on.
         break;
 
       case 2: // Motor OFF
         frontMotorESC.writeMicroseconds(noThrust); // Turn both motors off
-        // backMotorESC.writeMicroseconds(noThrust); // Uncomment if using a separate back motor control
+        // backMotorESC.writeMicroseconds(noThrust); // Turn back motor off if used
         digitalWrite(LED_BUILTIN, LOW); // Turn OFF on-board LED to represent motor off.
         break;
 
