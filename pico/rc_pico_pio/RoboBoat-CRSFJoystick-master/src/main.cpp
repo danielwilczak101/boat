@@ -41,6 +41,11 @@ Servo backMotorESC;
 
 #define AUTONOMOUS_PIN 11 // Autonomous/RC relays connected to PG11
 
+//Motor Offset 
+int frontMotorOffset = 10;
+
+int backMotorOffset = -10;
+
 
 //Motor thrust idle value (May need fine tuning)
 int idleThrust = 0; 
@@ -191,7 +196,7 @@ void packetChannels() {
 
 // Not needed becuase we want out boat to drive like the autonomous simple code above.
     frontServo.write(frontServoPosition);
-    backServo.write(frontServoPosition);
+    backServo.write(frontServoPosition+10);
     frontMotorESC.writeMicroseconds(motorSpeed);
     backMotorESC.writeMicroseconds(motorSpeed);
 }
