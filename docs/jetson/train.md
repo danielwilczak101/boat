@@ -16,7 +16,7 @@ cd boat
 ## Training
 Make sure you have a version folder in `data`` with the proper [orginized](https://danielwilczak101.github.io/boat/jetson/organize/) format.
 ```
-python3 train.py --dataset-type=voc --data=data/v1 --model-dir=models/v1 --batch-size=2 --workers=1 --epochs=5 resolution=640
+python3 train.py --dataset-type=voc --data=data/v2 --model-dir=models/v2 --batch-size=2 --workers=1 --epochs=5 --resolution=640
 ```
 
 ## Save the model

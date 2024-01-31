@@ -44,10 +44,10 @@ for name, directory in DIRECTORIES.items():
     for file in files:
         if file.suffix == ".jpg":
             file_names[name].add(file.stem)
-            #file.rename(JPEG_IMAGES / file.name)
+            file.rename(JPEG_IMAGES / file.name)
         elif file.suffix == ".xml":
             file_names[name].add(file.stem)
-            #file.rename(ANNOTATIONS / file.name)
+            file.rename(ANNOTATIONS / file.name)
 
 # Create the files with the image names in them. This is what
 # training will use for train,test, and validation.
