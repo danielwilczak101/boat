@@ -18,5 +18,5 @@ cd boat
 Put your video in the `videos/` folder and run the code below.
 
 ```
-python3 detect.py --model=models/v1/ssd-mobilenet.onnx --labels=models/v1/labels.txt --input-width=640 --input-height=640 /video/<VIDEO FILE NAME>.mp4
+/jetson-inference/boat/jetson# python3 control.py --model=models/v2/ssd-mobilenet.onnx --labels=models/v2/labels.txt --input-width=640 --input-height=640 --input-blob=input_0 --output-cvg=scores --output-bbox=boxes /jetson-inference/boat/tasks/run1.mp4
 ```

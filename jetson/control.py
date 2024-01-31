@@ -7,6 +7,9 @@ import asyncio
 from jetson_inference import detectNet
 from jetson_utils import cudaDrawLine, videoSource, videoOutput, Log
 
+# True if running on the boat, false if on shadow mode.
+ROBOT_CONNECTED = True
+
 # parse the command line
 parser = argparse.ArgumentParser(
     description="Locate objects in a live camera stream using an object detection DNN.", 
@@ -34,8 +37,8 @@ output_capture = videoOutput(args.output, argv=sys.argv)
 # note: to hard-code the paths to load a model, the following API can be used:
 #
 detect_net = detectNet(
-    model="models/v1/ssd-mobilenet.onnx",
-    labels="models/v1/labels.txt", 
+    model="models/v2/ssd-mobilenet.onnx",
+    labels="models/v2/labels.txt", 
     input_blob="input_0",
     output_cvg="scores",
     output_bbox="boxes", 
@@ -49,13 +52,55 @@ THRESHOLD: float = 25
 direction: float = 0.0
 weight: float = 0.0
 
+if ROBOT_CONNECTED:
+	import serial
+	import time
+
+	# Set the correct serial port for your Arduino (e.g., COM3, /dev/ttyACM0, etc.)
+	SERIAL_PORT = '/dev/ttyACM0'  # Change this to your serial port
+	BAUD_RATE = 115200
+
+	# Establish a serial connection
+	ser = serial.Serial(SERIAL_PORT, BAUD_RATE, timeout=1)
+
+
+	def send_command(command):
+		"""Send a command to the Arduino."""
+		ser.write(f"{command}\n".encode())
+		time.sleep(1)  # Wait for the Arduino to process the command
+		print(ser.readline().decode().strip())  # Print the response from Arduino
+
+	def turn_motor_on():
+		"""Send command to turn the motor on."""
+		send_command(1)
+
+	def turn_motor_off():
+		"""Send command to turn the motor off."""
+		send_command(2)
+
+	def set_servo_angle(angle):
+		"""Send command to set the servo to a specific angle."""
+		if 0 <= angle <= 180:
+			send_command(3)
+			send_command(angle)
+		else:
+			print("Invalid angle. Please enter a value between 0 and 180.")
+else:
+    def turn_motor_on():
+        pass
+    def turn_motor_off():
+        pass
+    def set_servo_angle(angle):
+        pass
+
+
 async def read_data(
     input_capture,
     output_capture,
     detect_net,
     data,
     resolution=640.0,
-    delta=0.1,
+    delta=0.03,
 ):
     direction = 0.0
     weight = 0.0
@@ -84,15 +129,20 @@ async def read_data(
         
         #print(nearest)
         
-        if len(nearest) == 1:
+        if len(nearest) == 0:
+            direction += delta * (0 - direction)
+            weight += delta * (1 - weight)
+        elif len(nearest) == 1:
             for detection in nearest.values():
-                if detection.Center[0] < resolution / 2:
+                if detection.Area < 5000:
+                    dx = detection.Center[0] - resolution / 2
+                elif detection.Center[0] < resolution / 2:
                     dx = detection.Center[0]
                 else:
                     dx = detection.Center[0] - resolution
                 direction += delta * (dx - direction)
                 weight += delta * (1 - weight)
-        elif len(nearest) > 1:
+        else:
             dx = 0.0
             for detection in nearest.values():
                 dx += detection.Center[0] - resolution / 2
@@ -101,15 +151,24 @@ async def read_data(
             weight += delta * (1 - weight)
         
         if weight != 0.0:
-            data[:] = [direction / weight]
-            x = resolution / 2 + data[0]
+            if len(nearest) == 0:
+                data["direction"] = -direction / weight
+            else:
+                data["direction"] = direction / weight
+            x = resolution / 2 + data["direction"]
             cudaDrawLine(img, (x, 0), (x, resolution - 1), (255, 127, 0, 200), 10)
 
         # render the image
         output_capture.Render(img)
 
         # update the title bar
-        output_capture.SetStatus("{:s} | Network {:.0f} FPS".format(args.network, detect_net.GetNetworkFPS()))
+        output_capture.SetStatus(
+            "{:s} | Network {:.0f} FPS | {}".format(
+                args.network,
+                detect_net.GetNetworkFPS(),
+                data.get("command", ""),
+            )
+        )
 
         # print out performance info
         #net.PrintProfilerTimes()
@@ -117,39 +176,40 @@ async def read_data(
         # exit on input/output EOS
         if not input_capture.IsStreaming() or not output_capture.IsStreaming():
             break
-    data[:] = [None]
+    data["stop"] = True
 
-async def send_commands(data, frequency=1, threshold=25):
-    command = ""
-    while True:
+async def send_commands(data, frequency=10, threshold=25):
+    while not data["stop"]:
         await asyncio.sleep(frequency)
-        if not data:
+        if "direction" not in data:
             continue
         
-        direction = data[0]
+        direction = data["direction"]
         
         if direction is None:
             break
         
-        new_command = []
-        if abs(direction) < threshold:
-            new_command.append("straight")
-        if direction < 0:
-            new_command.append("left")
-        else:
-            new_command.append("right")
-        new_command = " ".join(new_command)
+        commands = []
         
-        if command != new_command:
-            print(new_command)
-        command = new_command
+        if abs(direction) < threshold:
+            commands.append("straight")
+        
+        if direction < 0:
+            commands.append("left")
+            set_servo_angle(direction / 10 + 90)
+        else:
+            commands.append("right")
+            set_servo_angle(direction / 10 + 90)
+        commands.append(str(round(direction / 10 + 90)))
+        data["command"] = " ".join(commands)
 
 async def main():
-    data = []
+    data = {"stop": False}
+    turn_motor_on()
     await asyncio.gather(
         read_data(input_capture, output_capture, detect_net, data),
         send_commands(data),
     )
+    turn_motor_off()
 
 asyncio.run(main())
-
