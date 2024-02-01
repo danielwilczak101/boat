@@ -2,7 +2,7 @@
 Open a terminal and run this commands. To ssh `ssh boat@192.168.0.196`.       
 
 ## Control
-Controls is when you want the craft to run it's control operations for the compitions. Make sure to ``. Need to rebuild containe to fix this but that takes a hot minute. You can also run using the camera `/dev/video0`.
+Controls is when you want the craft to run it's control operations for the compitions. Make sure to. Need to rebuild containe to fix this but that takes a hot minute. You can also run using the camera `/dev/video0`.
 
 ```
 cd Desktop/jetson-inference/
