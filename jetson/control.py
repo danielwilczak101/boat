@@ -73,16 +73,24 @@ if ROBOT_CONNECTED:
         """Send command to turn the motor off."""
         send_command(2, 0)
 
-    def set_servo_angle(angle):
+    def set_servo_angle(angle, threshold=10):
         """Send command to set the servo to a specific angle."""
+        
+        # Set angle thresholds.
+        if angle < -threshold:
+            angle = -threshold
+        elif angle > threshold:
+            angle = threshold
+        
+        # Adjust: 100 = straight.
+        angle += 100
+        
         if 0 <= angle <= 180:
             angle = round(angle)
             send_command(3, angle)
             print(f"Angle {angle}")
         else:
             print("Invalid angle. Please enter a value between 0 and 180.")
-
-    
     
 else:
     def turn_motor_on():
@@ -99,25 +107,44 @@ async def read_data(
     detect_net,
     data,
     resolution=640.0,
-    delta=0.03,
+    delta=0.01,
+    ensure_stop=True
 ):
+    if ensure_stop:
+        try:
+            return await read_data(
+                input_capture,
+                output_capture,
+                detect_net,
+                data,
+                resolution,
+                delta,
+                False,
+            )
+        finally:
+            data["stop"] = True
+    
+    # Calculate the average direction over time.
     direction = 0.0
     weight = 0.0
-    # process frames until EOS or the user exits
+    
+    # Process frames until EOS or the user exits.
     while True:
+        
+        # Run other asynchronous code.
         await asyncio.sleep(0)
-        # capture the next image
+        
+        # Capture the next image.
         img = input_capture.Capture()
-
-        if img is None: # timeout
+        
+        # Capture timed out, try again.
+        if img is None:
             continue
         
-        # detect objects in the image (with overlay)
+        # Detect objects in the image (with overlay).
         detections = detect_net.Detect(img, overlay=args.overlay)
-
-        # print the detections
-        #print("detected {:d} objects in image".format(len(detections)))
         
+        # Calculate the nearest bouy of each color.
         nearest = {}
 
         for detection in detections:
@@ -126,41 +153,55 @@ async def read_data(
             elif nearest[detection.ClassID].Area < detection.Area:
                 nearest[detection.ClassID] = detection
         
-        #print(nearest)
+        # Calculate the direction to go.
+        dx = 0.0
         
-        if len(nearest) == 0:
-            direction += delta * (0 - direction)
-            weight += delta * (1 - weight)
-        elif len(nearest) == 1:
-            for detection in nearest.values():
-                if detection.Area < 5000:
-                    dx = detection.Center[0] - resolution / 2
-                elif detection.Center[0] < resolution / 2:
-                    dx = detection.Center[0]
-                else:
-                    dx = detection.Center[0] - resolution
-                direction += delta * (dx - direction)
-                weight += delta * (1 - weight)
-        else:
-            dx = 0.0
-            for detection in nearest.values():
+        for detection in nearest.values():
+            # Really far bouy, go towards it.
+            if detection.Area < 2000:
                 dx += detection.Center[0] - resolution / 2
-            dx /= len(nearest)
-            direction += delta * (dx - direction)
-            weight += delta * (1 - weight)
-        
-        if weight != 0.0:
-            if len(nearest) == 0:
-                data["direction"] = -direction / weight
+            # White bouy, go right.
+            elif detection.ClassID == 1:
+                dx += 100
+            # Blue bouy, go left.
+            elif detection.ClassID == 2:
+                dx -= 100
+            # Far bouy, go towards it.
+            elif detection.Area < 4000:
+                dx += detection.Center[0] - resolution / 2
+            # Close bouy on the left, go right.
+            elif detection.Center[0] < resolution / 2:
+                dx += detection.Center[0]
+            # Close bouy on the right, go left.
             else:
-                data["direction"] = direction / weight
-            x = resolution / 2 + data["direction"]
-            cudaDrawLine(img, (x, 0), (x, resolution - 1), (255, 127, 0, 200), 10)
+                dx += detection.Center[0] - resolution
+        
+        # Take the average of all of the directions.
+        if len(nearest) > 0:
+            dx /= len(nearest)
+        
+        # Update direction calculation.
+        direction += delta * (dx - direction)
+        weight += delta * (1 - weight)
+        
+        data["dx"] = dx
+        # If no bouys seen, go in the opposite direction that it last went.
+        # Roomba algorithm.
+        if len(nearest) == 0:
+            data["direction"] = -direction / weight
+        
+        # If bouys detected, follow the direction.
+        else:
+            data["direction"] = direction / weight
+        
+        # Draw the estimate of where to go on the image.
+        x = resolution / 2 + data["direction"]
+        cudaDrawLine(img, (x, 0), (x, resolution - 1), (255, 127, 0, 200), 10)
 
-        # render the image
+        # Render the image.
         output_capture.Render(img)
 
-        # update the title bar
+        # Update the title bar.
         output_capture.SetStatus(
             "{:s} | Network {:.0f} FPS | {}".format(
                 args.network,
@@ -169,47 +210,63 @@ async def read_data(
             )
         )
 
-        # print out performance info
+        # Print out performance info.
         #net.PrintProfilerTimes()
 
-        # exit on input/output EOS
+        # Exit on input/output EOS.
         if not input_capture.IsStreaming() or not output_capture.IsStreaming():
             break
-    data["stop"] = True
 
 async def send_commands(data, frequency=1, threshold=25):
+    # Loop until no new capture data.
     while not data["stop"]:
+        
+        # Run other asynchronous code.
         await asyncio.sleep(frequency)
+        
+        # Wait until first direction input.
         if "direction" not in data:
             continue
         
-        direction = data["direction"]
+        # Get the next direction to go in.
+        direction = 0.7 * data["direction"] + 0.3 * data["dx"]
         
-        if direction is None:
-            break
-        
+        # Track recommended directions 
         commands = []
         
+        # Only for printing purposes.
         if abs(direction) < threshold:
             commands.append("straight")
         
+        # Only for printing purposes.
         if direction < 0:
             commands.append("left")
-            set_servo_angle(direction * 4 / 10 + 90)
         else:
             commands.append("right")
-            set_servo_angle(direction * 4 / 10 + 90)
-        commands.append(str(round(direction / 10 + 90)))
+        
+        # Convert pixel direction to angle direction by dampening.
+        direction /= 4
+        
+        commands.append(str(round(direction)))
         data["command"] = " ".join(commands)
+        
+        set_servo_angle(direction)
+        await asyncio.sleep(0.3)
+        set_servo_angle(0.0)
 
 async def main():
     data = {"stop": False}
-    turn_motor_on()
-    await asyncio.gather(
-        read_data(input_capture, output_capture, detect_net, data),
-        send_commands(data),
-    )
-    turn_motor_off()
+    
+    try:
+        turn_motor_on()
+        
+        # Read the data and send commands to the boat.
+        await asyncio.gather(
+            read_data(input_capture, output_capture, detect_net, data),
+            send_commands(data),
+        )
+    
+    finally:
+        turn_motor_off()
 
 asyncio.run(main())
-    
