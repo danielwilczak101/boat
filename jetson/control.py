@@ -3,6 +3,7 @@
 import sys
 import argparse
 import asyncio
+import time
 
 from jetson_inference import detectNet
 from jetson_utils import cudaDrawLine, videoSource, videoOutput, Log
@@ -48,7 +49,7 @@ detect_net = detectNet(
 
 RESOLUTION: float = 640.0
 DELTA: float = 0.1
-THRESHOLD: float = 25
+THRESHOLD: float = 5
 
 direction: float = 0.0
 weight: float = 0.0
@@ -73,7 +74,7 @@ if ROBOT_CONNECTED:
         """Send command to turn the motor off."""
         send_command(2, 0)
 
-    def set_servo_angle(angle, threshold=10):
+    def set_servo_angle(angle, threshold=THRESHOLD):
         """Send command to set the servo to a specific angle."""
         
         # Set angle thresholds.
@@ -107,8 +108,8 @@ async def read_data(
     detect_net,
     data,
     resolution=640.0,
-    delta=0.01,
-    ensure_stop=True
+    delta=0.1,
+    ensure_stop=True,
 ):
     if ensure_stop:
         try:
@@ -128,6 +129,8 @@ async def read_data(
     direction = 0.0
     weight = 0.0
     
+    bouys = {}
+    
     # Process frames until EOS or the user exits.
     while True:
         
@@ -146,53 +149,49 @@ async def read_data(
         
         # Calculate the nearest bouy of each color.
         nearest = {}
-
+        
         for detection in detections:
             if detection.ClassID not in nearest:
                 nearest[detection.ClassID] = detection
-            elif nearest[detection.ClassID].Area < detection.Area:
+            elif nearest[detection.ClassID].Confidence < detection.Confidence:
                 nearest[detection.ClassID] = detection
+        
+        for state in bouys.values():
+            state["area"] += 0.03 * (0 - state["area"])
+            state["x"] += 0.03 * (resolution / 2 - state["x"])
+            state["confidence"] += 0.03 * (0 - state["confidence"])
+            state["weight"] += 0.03 * (1 - state["weight"])
+        
+        for detection in nearest.values():
+            if detection.ClassID not in bouys:
+                bouys[detection.ClassID] = dict.fromkeys(("area", "x", "confidence", "weight"), 0.0)
+            state = bouys[detection.ClassID]
+            state["area"] += 0.03 * (detection.Area - state["area"])
+            state["x"] += 0.03 * (detection.Center[0] - state["x"])
+            state["confidence"] += 0.03 * (detection.Confidence - state["confidence"])
+            state["weight"] += 0.03 * (1 - state["weight"])
         
         # Calculate the direction to go.
         dx = 0.0
         
-        for detection in nearest.values():
-            # Really far bouy, go towards it.
-            if detection.Area < 2000:
-                dx += detection.Center[0] - resolution / 2
-            # White bouy, go right.
-            elif detection.ClassID == 1:
-                dx += 100
-            # Blue bouy, go left.
-            elif detection.ClassID == 2:
-                dx -= 100
-            # Far bouy, go towards it.
-            elif detection.Area < 4000:
-                dx += detection.Center[0] - resolution / 2
-            # Close bouy on the left, go right.
-            elif detection.Center[0] < resolution / 2:
-                dx += detection.Center[0]
-            # Close bouy on the right, go left.
+        for state in bouys.values():
+            if state["area"] < 7000:
+                dx += (state["x"] / state["weight"] - resolution / 2) * state["confidence"] / state["weight"]
+            elif state["x"] / state["weight"] < resolution / 2:
+                dx += (state["x"] / state["weight"]) * state["confidence"] / state["weight"]
             else:
-                dx += detection.Center[0] - resolution
+                dx += (state["x"] / state["weight"] - resolution) * state["confidence"] / state["weight"]
         
         # Take the average of all of the directions.
-        if len(nearest) > 0:
-            dx /= len(nearest)
+        if len(bouys) > 0:
+            dx /= len(bouys)
         
         # Update direction calculation.
         direction += delta * (dx - direction)
         weight += delta * (1 - weight)
         
         data["dx"] = dx
-        # If no bouys seen, go in the opposite direction that it last went.
-        # Roomba algorithm.
-        if len(nearest) == 0:
-            data["direction"] = -direction / weight
-        
-        # If bouys detected, follow the direction.
-        else:
-            data["direction"] = direction / weight
+        data["direction"] = direction / weight
         
         # Draw the estimate of where to go on the image.
         x = resolution / 2 + data["direction"]
@@ -217,7 +216,9 @@ async def read_data(
         if not input_capture.IsStreaming() or not output_capture.IsStreaming():
             break
 
-async def send_commands(data, frequency=1, threshold=25):
+async def send_commands(data, frequency=1, threshold=THRESHOLD):
+    angle = 0.0
+    t0 = None
     # Loop until no new capture data.
     while not data["stop"]:
         
@@ -227,30 +228,36 @@ async def send_commands(data, frequency=1, threshold=25):
         # Wait until first direction input.
         if "direction" not in data:
             continue
-        
-        # Get the next direction to go in.
-        direction = 0.7 * data["direction"] + 0.3 * data["dx"]
+        elif t0 is None:
+            t0 = time.monotonic_ns()
+            continue
+        else:
+            t1 = time.monotonic_ns()
+            dt = (t1 - t0) * 1e-9
+            # Get the next direction to go in.
+            angle += 3 * dt * (0.7 * data["direction"] + 0.3 * data["dx"])
+            t0 = t1
         
         # Track recommended directions 
         commands = []
         
         # Only for printing purposes.
-        if abs(direction) < threshold:
+        if abs(angle) < threshold:
             commands.append("straight")
-        
+        elif angle < 0:
+            angle = -threshold
+        else:
+            angle = threshold
         # Only for printing purposes.
-        if direction < 0:
+        if angle < 0:
             commands.append("left")
         else:
             commands.append("right")
         
-        # Convert pixel direction to angle direction by dampening.
-        direction /= 4
-        
-        commands.append(str(round(direction)))
+        commands.append(str(round(angle)))
         data["command"] = " ".join(commands)
         
-        set_servo_angle(direction)
+        set_servo_angle(angle / 4)
         await asyncio.sleep(0.3)
         set_servo_angle(0.0)
 
