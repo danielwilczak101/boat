@@ -28,13 +28,13 @@ Servo backServo;
 Servo frontMotorESC;
 Servo backMotorESC;
 
-// Front Motor/Servo Pins 
-#define FRONT_MOTOR_PIN 22 // Front Motor ESC connected to (GP16 Level Shifted) GP22 3.3v
-#define FRONT_SERVO_PIN 17 // Front Servo connected to GP17
+// Front Motor/Servo Pins  (Autonomous boat V0.1 2/3/24 PCB)
+#define FRONT_MOTOR_PIN 16 // Front Motor ESC connected to GP16 3.3v
+#define FRONT_SERVO_PIN 17 // Front Servo connected to GP17 3.3v
 
 // Back Motor/Servo Pins 
-#define BACK_MOTOR_PIN 21  // Back Motor ESC connected to (GP18 Level Shifted) GP21 3.3v
-#define BACK_SERVO_PIN 19  // Back Servo connected to GP19
+#define BACK_MOTOR_PIN 18  // Back Motor ESC connected to GP18 3.3v
+#define BACK_SERVO_PIN 19  // Back Servo connected to GP19 3.3v
 
 
 #define ESTOP_PIN 13 // E-Stop relay pin connected to GP13
@@ -100,6 +100,9 @@ void printChannelData() {
         Serial.println(channels[i]);
     }
     Serial.println();
+    Serial.println();
+    Serial.println();
+    Serial.println();
 }
 
 
@@ -112,7 +115,7 @@ void packetChannels() {
     for (int i = 0; i < 8; i++) {
         channels[i] = crsf.getChannel(i + 1);
     }
-    printChannelData();
+    //printChannelData();
 
     // Update servo positions
     int frontServoPosition = map(channels[0], 999, 2000, 0, 180); // Example for channel 1
@@ -133,9 +136,19 @@ void packetChannels() {
     //RC SF Switch channel data for triggering E-Stop; Down is E-Stop ON (Power OFF); Up is E-Stop OFF (Power ON)
     int EStop = channels[4];
 
+    // Print the EStop Channel Data for Testing:
+    //Serial.print("E-Stop Switch:  ");
+    //Serial.println(channels[4]);
+    //Serial.println();
+
     //For Autonomous / RC Control Relays Switch
     int autonomousRCswitch = channels[5]; //Get channel data from RC Swtich SB
     int autonomousState = 0; 
+
+    // Print the Autonomous / RC Control Relays Switch Channel Data for Testing:
+    //Serial.print("RC/Auto Switch: ");
+    //Serial.println(channels[5]);
+    //Serial.println();
 
     if (autonomousRCswitch == 2000){ //RC SB Swtich BACK Position
        autonomousState = 0; 
@@ -165,13 +178,13 @@ void packetChannels() {
 
     if (EStop == 1000) {
       digitalWrite(ESTOP_PIN, LOW);
-      isCalibrated = false; // Reset calibration flag
+      //isCalibrated = false; // Reset calibration flag
       digitalWrite(LED_BUILTIN, LOW); //Turn Off Onboard Pico LED when E-Stop is off
     } else if (EStop == 2000 && !isCalibrated) {
       digitalWrite(ESTOP_PIN, HIGH);
-      delay(5000); //Delay 5 Seconds.
-      calibrateMotors(); //Initalize Motors after E-Stop is turned of (power is on)
-      isCalibrated = true; // Set flag to prevent re-calibration
+      //delay(5000); //Delay 5 Seconds.
+      //calibrateMotors(); //Initalize Motors after E-Stop is turned of (power is on)
+      //isCalibrated = true; // Set flag to prevent re-calibration
       digitalWrite(LED_BUILTIN, HIGH); // Turn on onboard pico LED when E-Stop is on
     }
 
