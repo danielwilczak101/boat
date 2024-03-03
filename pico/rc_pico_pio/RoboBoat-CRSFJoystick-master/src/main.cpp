@@ -129,7 +129,7 @@ void packetChannels() {
     int motorSpeed = map(channels[2], 1000, 2000, 1300, 1700); // Example for channel 3
 
     // Check if motorSpeed is within the specified range
-    if (motorSpeed >= 1450 && motorSpeed <= 1550) {
+    if (motorSpeed >= 1475 && motorSpeed <= 1525) {
         motorSpeed = 1500; // Set motorSpeed to 1500 if it's within the range
     }
 
@@ -152,15 +152,15 @@ void packetChannels() {
 
     if (autonomousRCswitch == 2000){ //RC SB Swtich BACK Position
        autonomousState = 1; 
-       digitalWrite(AUTONOMOUS_PIN, HIGH); //Turn Autonomous Relays to ON 
+       digitalWrite(AUTONOMOUS_PIN, LOW); //Turn Autonomous Relays to ON 
     } 
     else if (autonomousRCswitch == 1500) { //RC SB Swtich Middle Position
-      autonomousState = 1; 
-      digitalWrite(AUTONOMOUS_PIN, LOW); //Turn Autonomous Relays to Off on Startup
+      autonomousState = 0; 
+      digitalWrite(AUTONOMOUS_PIN, HIGH); //Turn Autonomous Relays to Off on Startup
     } 
     else if (autonomousRCswitch == 1000) { //RC SB Swtich FRONT Position
       autonomousState = 0; 
-      digitalWrite(AUTONOMOUS_PIN, LOW); //Turn Autonomous Relays to OFF on Startup
+      digitalWrite(AUTONOMOUS_PIN, HIGH); //Turn Autonomous Relays to OFF on Startup
     }
     //Serial.print("Linear Actuator State: ");
     //Serial.println(autonomousState);
