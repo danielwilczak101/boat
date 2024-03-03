@@ -151,15 +151,15 @@ void packetChannels() {
     //Serial.println();
 
     if (autonomousRCswitch == 2000){ //RC SB Swtich BACK Position
-       autonomousState = 0; 
+       autonomousState = 1; 
        digitalWrite(AUTONOMOUS_PIN, HIGH); //Turn Autonomous Relays to ON 
     } 
     else if (autonomousRCswitch == 1500) { //RC SB Swtich Middle Position
-      autonomousState = 0; 
+      autonomousState = 1; 
       digitalWrite(AUTONOMOUS_PIN, LOW); //Turn Autonomous Relays to Off on Startup
     } 
     else if (autonomousRCswitch == 1000) { //RC SB Swtich FRONT Position
-      autonomousState = 1; 
+      autonomousState = 0; 
       digitalWrite(AUTONOMOUS_PIN, LOW); //Turn Autonomous Relays to OFF on Startup
     }
     //Serial.print("Linear Actuator State: ");
@@ -176,16 +176,18 @@ void packetChannels() {
     //Serial.print("E-Stop Status: ");
     //Serial.println(EStop);
 
+    // EStop Pin HIGH = E-Stop ON (No Power to motors)
+    // EStop Pin LOW  = E-Stop OFF (Power to Motors)
     if (EStop == 1000) {
-      digitalWrite(ESTOP_PIN, LOW);
-      //isCalibrated = false; // Reset calibration flag
-      digitalWrite(LED_BUILTIN, LOW); //Turn Off Onboard Pico LED when E-Stop is off
-    } else if (EStop == 2000 && !isCalibrated) {
       digitalWrite(ESTOP_PIN, HIGH);
-      //delay(5000); //Delay 5 Seconds.
-      //calibrateMotors(); //Initalize Motors after E-Stop is turned of (power is on)
-      //isCalibrated = true; // Set flag to prevent re-calibration
-      digitalWrite(LED_BUILTIN, HIGH); // Turn on onboard pico LED when E-Stop is on
+      isCalibrated = false; // Reset calibration flag
+      digitalWrite(LED_BUILTIN, HIGH); //Turn ON Onboard Pico LED when E-Stop is off
+    } else if (EStop == 2000 && !isCalibrated) {
+      digitalWrite(ESTOP_PIN, LOW);
+      delay(2000); //Delay 2 Seconds.
+      calibrateMotors(); //Initalize Motors after E-Stop is turned of (power is on)
+      isCalibrated = true; // Set flag to prevent re-calibration
+      digitalWrite(LED_BUILTIN, LOW); // Turn on onboard pico LED when E-Stop is on
     }
 
 
