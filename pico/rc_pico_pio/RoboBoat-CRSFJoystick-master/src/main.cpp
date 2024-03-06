@@ -41,6 +41,13 @@ Servo backMotorESC;
 
 #define AUTONOMOUS_PIN 11 // Autonomous/RC relays connected to PG11
 
+//Water Cannon
+#define WATER_CANNON_SERVO_1 9 // Servo 1 connected to GP9
+#define WATER_CANNON_SERVO_2 8 // Servo 2 connected to GP8
+
+#define WATER_CANNON_RELAY 6 // Water Cannon Relay connected to GP6
+
+
 //Motor Offset 
 int frontMotorOffset = 10;
 
@@ -190,6 +197,14 @@ void packetChannels() {
       digitalWrite(LED_BUILTIN, LOW); // Turn on onboard pico LED when E-Stop is on
     }
 
+    //RC SC Switch channel data for triggering Water Cannon Relay; Down is Water Cannon ON (Power ON); Up is Water Cannon OFF (Power OFF)
+    int WaterCannonRelay = channels[6];
+
+    if (WaterCannonRelay == 1000) {
+      digitalWrite(WATER_CANNON_RELAY, HIGH);
+    } else if (WaterCannonRelay == 2000) {
+      digitalWrite(WATER_CANNON_RELAY, LOW);
+    }
 
 // Code to make RC Controls drive like our basic autonomous software controls
     //int rightStickHORIZONTAL = channels[0];
