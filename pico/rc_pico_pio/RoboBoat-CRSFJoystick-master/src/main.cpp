@@ -143,13 +143,8 @@ void packetChannels() {
     }
 
     // Check if motorSpeed is within the specified range
-<<<<<<< HEAD
     if (BackmotorSpeed >= 1450 && BackmotorSpeed <= 1550) {
         BackmotorSpeed = 1500; // Set motorSpeed to 1500 if it's within the range
-=======
-    if (motorSpeed >= 1475 && motorSpeed <= 1525) {
-        motorSpeed = 1500; // Set motorSpeed to 1500 if it's within the range
->>>>>>> 76e571c17b181ef2ed1c2b584485e040a703544d
     }
 
     //RC SF Switch channel data for triggering E-Stop; Down is E-Stop ON (Power OFF); Up is E-Stop OFF (Power ON)
