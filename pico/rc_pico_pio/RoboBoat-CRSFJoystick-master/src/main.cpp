@@ -28,18 +28,25 @@ Servo backServo;
 Servo frontMotorESC;
 Servo backMotorESC;
 
-// Front Motor/Servo Pins 
-#define FRONT_MOTOR_PIN 22 // Front Motor ESC connected to (GP16 Level Shifted) GP22 3.3v
-#define FRONT_SERVO_PIN 17 // Front Servo connected to GP17
+// Front Motor/Servo Pins  (Autonomous boat V0.1 2/3/24 PCB)
+#define FRONT_MOTOR_PIN 16 // Front Motor ESC connected to GP16 3.3v
+#define FRONT_SERVO_PIN 17 // Front Servo connected to GP17 3.3v
 
 // Back Motor/Servo Pins 
-#define BACK_MOTOR_PIN 21  // Back Motor ESC connected to (GP18 Level Shifted) GP21 3.3v
-#define BACK_SERVO_PIN 19  // Back Servo connected to GP19
+#define BACK_MOTOR_PIN 18  // Back Motor ESC connected to GP18 3.3v
+#define BACK_SERVO_PIN 19  // Back Servo connected to GP19 3.3v
 
 
 #define ESTOP_PIN 13 // E-Stop relay pin connected to GP13
 
 #define AUTONOMOUS_PIN 11 // Autonomous/RC relays connected to PG11
+
+//Water Cannon
+#define WATER_CANNON_SERVO_1 9 // Servo 1 connected to GP9
+#define WATER_CANNON_SERVO_2 8 // Servo 2 connected to GP8
+
+#define WATER_CANNON_RELAY 6 // Water Cannon Relay connected to GP6
+
 
 //Motor Offset 
 int frontMotorOffset = 10;
@@ -100,6 +107,9 @@ void printChannelData() {
         Serial.println(channels[i]);
     }
     Serial.println();
+    Serial.println();
+    Serial.println();
+    Serial.println();
 }
 
 
@@ -112,7 +122,7 @@ void packetChannels() {
     for (int i = 0; i < 8; i++) {
         channels[i] = crsf.getChannel(i + 1);
     }
-    printChannelData();
+    //printChannelData();
 
     // Update servo positions
     int frontServoPosition = map(channels[0], 999, 2000, 0, 180); // Example for channel 1
@@ -133,28 +143,43 @@ void packetChannels() {
     }
 
     // Check if motorSpeed is within the specified range
+<<<<<<< HEAD
     if (BackmotorSpeed >= 1450 && BackmotorSpeed <= 1550) {
         BackmotorSpeed = 1500; // Set motorSpeed to 1500 if it's within the range
+=======
+    if (motorSpeed >= 1475 && motorSpeed <= 1525) {
+        motorSpeed = 1500; // Set motorSpeed to 1500 if it's within the range
+>>>>>>> 76e571c17b181ef2ed1c2b584485e040a703544d
     }
 
     //RC SF Switch channel data for triggering E-Stop; Down is E-Stop ON (Power OFF); Up is E-Stop OFF (Power ON)
     int EStop = channels[4];
 
+    // Print the EStop Channel Data for Testing:
+    //Serial.print("E-Stop Switch:  ");
+    //Serial.println(channels[4]);
+    //Serial.println();
+
     //For Autonomous / RC Control Relays Switch
     int autonomousRCswitch = channels[5]; //Get channel data from RC Swtich SB
     int autonomousState = 0; 
 
+    // Print the Autonomous / RC Control Relays Switch Channel Data for Testing:
+    //Serial.print("RC/Auto Switch: ");
+    //Serial.println(channels[5]);
+    //Serial.println();
+
     if (autonomousRCswitch == 2000){ //RC SB Swtich BACK Position
-       autonomousState = 0; 
-       digitalWrite(AUTONOMOUS_PIN, HIGH); //Turn Autonomous Relays to ON 
+       autonomousState = 1; 
+       digitalWrite(AUTONOMOUS_PIN, LOW); //Turn Autonomous Relays to ON 
     } 
     else if (autonomousRCswitch == 1500) { //RC SB Swtich Middle Position
       autonomousState = 0; 
-      digitalWrite(AUTONOMOUS_PIN, LOW); //Turn Autonomous Relays to Off on Startup
+      digitalWrite(AUTONOMOUS_PIN, HIGH); //Turn Autonomous Relays to Off on Startup
     } 
     else if (autonomousRCswitch == 1000) { //RC SB Swtich FRONT Position
-      autonomousState = 1; 
-      digitalWrite(AUTONOMOUS_PIN, LOW); //Turn Autonomous Relays to OFF on Startup
+      autonomousState = 0; 
+      digitalWrite(AUTONOMOUS_PIN, HIGH); //Turn Autonomous Relays to OFF on Startup
     }
     //Serial.print("Linear Actuator State: ");
     //Serial.println(autonomousState);
@@ -170,18 +195,28 @@ void packetChannels() {
     //Serial.print("E-Stop Status: ");
     //Serial.println(EStop);
 
+    // EStop Pin HIGH = E-Stop ON (No Power to motors)
+    // EStop Pin LOW  = E-Stop OFF (Power to Motors)
     if (EStop == 1000) {
-      digitalWrite(ESTOP_PIN, LOW);
-      isCalibrated = false; // Reset calibration flag
-      digitalWrite(LED_BUILTIN, LOW); //Turn Off Onboard Pico LED when E-Stop is off
-    } else if (EStop == 2000 && !isCalibrated) {
       digitalWrite(ESTOP_PIN, HIGH);
-      delay(5000); //Delay 5 Seconds.
+      isCalibrated = false; // Reset calibration flag
+      digitalWrite(LED_BUILTIN, HIGH); //Turn ON Onboard Pico LED when E-Stop is off
+    } else if (EStop == 2000 && !isCalibrated) {
+      digitalWrite(ESTOP_PIN, LOW);
+      delay(2000); //Delay 2 Seconds.
       calibrateMotors(); //Initalize Motors after E-Stop is turned of (power is on)
       isCalibrated = true; // Set flag to prevent re-calibration
-      digitalWrite(LED_BUILTIN, HIGH); // Turn on onboard pico LED when E-Stop is on
+      digitalWrite(LED_BUILTIN, LOW); // Turn on onboard pico LED when E-Stop is on
     }
 
+    //RC SC Switch channel data for triggering Water Cannon Relay; Down is Water Cannon ON (Power ON); Up is Water Cannon OFF (Power OFF)
+    int WaterCannonRelay = channels[6];
+
+    if (WaterCannonRelay == 1000) {
+      digitalWrite(WATER_CANNON_RELAY, HIGH);
+    } else if (WaterCannonRelay == 2000) {
+      digitalWrite(WATER_CANNON_RELAY, LOW);
+    }
 
 // Code to make RC Controls drive like our basic autonomous software controls
     //int rightStickHORIZONTAL = channels[0];
