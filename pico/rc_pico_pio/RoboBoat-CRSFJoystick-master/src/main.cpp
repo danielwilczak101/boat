@@ -123,11 +123,18 @@ void packetChannels() {
     // 1100 is max reverse
     // 1900 is max forward 
     // We are running at 24V so we need to limit power to not burn out motors.
-    int motorSpeed = map(channels[2], 1000, 2000, 1300, 1700); // Example for channel 3
+    int FrontmotorSpeed = map(channels[2], 1000, 2000, 1700, 1300); // Example for channel 3
+    int BackmotorSpeed = map(channels[2], 1000, 2000, 1300, 1700); // Example for channel 3
+
 
     // Check if motorSpeed is within the specified range
-    if (motorSpeed >= 1450 && motorSpeed <= 1550) {
-        motorSpeed = 1500; // Set motorSpeed to 1500 if it's within the range
+    if (FrontmotorSpeed >= 1450 && FrontmotorSpeed <= 1550) {
+        FrontmotorSpeed = 1500; // Set motorSpeed to 1500 if it's within the range
+    }
+
+    // Check if motorSpeed is within the specified range
+    if (BackmotorSpeed >= 1450 && BackmotorSpeed <= 1550) {
+        BackmotorSpeed = 1500; // Set motorSpeed to 1500 if it's within the range
     }
 
     //RC SF Switch channel data for triggering E-Stop; Down is E-Stop ON (Power OFF); Up is E-Stop OFF (Power ON)
@@ -197,8 +204,8 @@ void packetChannels() {
 // Not needed becuase we want out boat to drive like the autonomous simple code above.
     frontServo.write(frontServoPosition);
     backServo.write(frontServoPosition+10);
-    frontMotorESC.writeMicroseconds(motorSpeed);
-    backMotorESC.writeMicroseconds(motorSpeed);
+    frontMotorESC.writeMicroseconds(FrontmotorSpeed);
+    backMotorESC.writeMicroseconds(BackmotorSpeed);
 }
 
 
