@@ -1,0 +1,67 @@
+site_name: Boat Documentation
+repo_url: https://danielwilczak101.github.io/boat/
+
+theme:
+  name: material
+  features:
+    - content.code.select
+    - content.code.copy
+    - content.action.edit
+    - content.action.view
+    - content.code.annotate
+    
+  palette: 
+    # Palette toggle for light mode
+    - scheme: default
+      primary: blue
+      accent: indigo
+      toggle:
+        icon: material/brightness-7 
+        name: Switch to dark mode
+    # Palette toggle for dark mode
+    - scheme: slate
+      primary: blue
+      accent: indigo
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+
+nav:
+  - Jetson:
+    - Home: index.md
+    - Install: jetson/install.md
+    - Orginize: jetson/organize.md
+    - Train: jetson/train.md
+    - Run: jetson/run.md
+  - Pico:
+    - Setup: pico/setup.md
+
+
+
+markdown_extensions:
+  - tables
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - attr_list
+  - md_in_html
+  - pymdownx.superfences
+  - admonition
+  - pymdownx.details
+  - abbr
+  - pymdownx.highlight:
+      anchor_linenums: true
+  
+  # Icons
+  - pymdownx.emoji:
+      emoji_index: !!python/name:materialx.emoji.twemoji
+      emoji_generator: !!python/name:materialx.emoji.to_svg
+
+  # Content Tabs
+  - pymdownx.tabbed:
+      alternate_style: true 
+
+# Plugins
+plugins:
+  - glightbox
+  - search:
+      separator: '[\s\-,:!=\[\]()"`/]+|\.(?!\d)|&[lg]t;|(?!\b)(?=[A-Z][a-z])'
