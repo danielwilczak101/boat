@@ -142,6 +142,7 @@ void packetChannels() {
 
     //RC SF Switch channel data for triggering E-Stop; Down is E-Stop ON (Power OFF); Up is E-Stop OFF (Power ON)
     int EStop = channels[4];
+    //Serial.println(EStop);
 
     // Print the EStop Channel Data for Testing:
     //Serial.print("E-Stop Switch:  ");
